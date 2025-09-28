@@ -1,0 +1,1 @@
+Seperti iutu yang ada
