@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Absensi Digital Sekolah</title>
+
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <!-- Libraries for Exporting Data -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+      :root {
+        --primary-color: #5a67d8;
+        --primary-color-light: #7f8eee;
+        --secondary-color: #f7fafc;
+        --bg-color: #ffffff;
+        --text-color: #2d3748;
+        --light-text-color: #718096;
+        --border-color: #e2e8f0;
+        --success-color: #38a169;
+        --danger-color: #e53e3e;
+        --warning-color: #d69e2e;
+        --info-color: #3182ce;
+        --font-family: "Poppins", sans-serif;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --radius: 8px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: var(--font-family);
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      header {
+        background-color: var(--bg-color);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: var(--shadow-sm);
+      }
+      header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #schoolName {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        padding: 5px 0;
+      }
+      #schoolName:focus {
+        outline: none;
+        border-bottom: 2px solid var(--primary-color-light);
+      }
+      .menu-toggle {
+        display: none;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-color);
+        z-index: 1001;
+      }
+      nav ul {
+        list-style: none;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+      nav a {
+        text-decoration: none;
+        color: var(--light-text-color);
+        font-weight: 500;
+        padding: 10px 16px;
+        border-radius: var(--radius);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        position: relative;
+      }
+      nav a i {
+        margin-right: 8px;
+      }
+      nav a:hover,
+      nav a.active {
+        color: var(--primary-color);
+        background-color: rgba(90, 103, 216, 0.05);
+      }
+      .page {
+        display: none;
+        animation: fadeInPage 0.5s ease-in-out;
+      }
+      .page.active {
+        display: block;
+      }
+      @keyframes fadeInPage {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      main {
+        padding: 2rem 0;
+      }
+      .card,
+      .welcome-card {
+        background-color: var(--bg-color);
+        border-radius: var(--radius);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+      }
+      .welcome-card {
+        max-width: 700px;
+        margin: 4rem auto;
+        text-align: center;
+        padding: 3rem;
+        background: linear-gradient(135deg, var(--bg-color) 0%, #f8faff 100%);
+        box-shadow: var(--shadow-lg);
+      }
+      .welcome-card h2 {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+      }
+      .welcome-card p {
+        font-size: 1.1rem;
+        color: var(--light-text-color);
+        margin-bottom: 2.5rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      h2 {
+        margin-bottom: 2rem;
+        color: var(--text-color);
+        font-weight: 600;
+        font-size: 1.75rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      h2 i {
+        color: var(--primary-color);
+      }
+      .btn {
+        padding: 12px 24px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: var(--shadow-sm);
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      .btn.primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background-color: var(--primary-color-light);
+        border-color: var(--primary-color-light);
+      }
+      .btn.secondary {
+        background-color: var(--light-text-color);
+        border-color: var(--light-text-color);
+        color: #fff;
+      }
+      .btn.danger {
+        background-color: var(--danger-color);
+        border-color: var(--danger-color);
+        color: #fff;
+      }
+      .btn.success {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+        color: #fff;
+      }
+      .btn:disabled {
+        background-color: #ccc;
+        border-color: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .table-wrapper {
+        overflow-x: auto;
+        background: var(--bg-color);
+        border-radius: var(--radius);
+        padding: 1rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+      }
+      thead th {
+        background-color: transparent;
+        font-weight: 600;
+        color: var(--light-text-color);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border-color);
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr {
+        transition: background-color 0.2s ease;
+      }
+      tbody tr:hover {
+        background-color: #fafbff;
+      }
+      tfoot tr {
+        background-color: var(--secondary-color);
+        font-weight: 600;
+      }
+      tfoot td {
+        border-top: 2px solid var(--primary-color);
+      }
+      .action-buttons button {
+        margin-right: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 5px;
+        transition: all 0.2s;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+      }
+      .action-buttons button:hover {
+        background-color: var(--secondary-color);
+        transform: scale(1.1);
+      }
+      .action-buttons .edit-btn {
+        color: var(--primary-color);
+      }
+      .action-buttons .delete-btn {
+        color: var(--danger-color);
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+      }
+      .toolbar:last-child {
+        margin-bottom: 0;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .form-group label {
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      input[type="text"],
+      input[type="date"],
+      select,
+      input[type="file"] {
+        padding: 12px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        font-size: 1rem;
+        font-family: var(--font-family);
+        background-color: var(--bg-color);
+        transition: all 0.2s ease;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.2);
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fade-in 0.3s;
+      }
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 30px;
+        border: none;
+        width: 90%;
+        max-width: 500px;
+        border-radius: var(--radius);
+        position: relative;
+        animation: slide-down 0.4s ease;
+        box-shadow: var(--shadow-lg);
+      }
+      .modal-content h3 {
+        margin-bottom: 2rem;
+        font-size: 1.5rem;
+        color: var(--text-color);
+      }
+      #studentForm .form-group {
+        margin-bottom: 1.25rem;
+      }
+      @keyframes slide-down {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .close-btn {
+        color: #aaa;
+        position: absolute;
+        top: 15px;
+        right: 25px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.2s ease;
+      }
+      .close-btn:hover {
+        color: var(--danger-color);
+      }
+      .status-radio-group label {
+        margin-right: 15px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+      }
+      #recapTable td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)) {
+        text-align: center;
+      }
+      #recapTable th {
+        text-align: center;
+      }
+      #recapTable th:first-child,
+      #recapTable th:nth-child(2),
+      #recapTable th:nth-child(3),
+      #recapTable th:nth-child(4) {
+        text-align: left;
+      }
+      #recapTable td:first-child,
+      #recapTable td:nth-child(2),
+      #recapTable td:nth-child(3),
+      #recapTable td:nth-child(4) {
+        text-align: left;
+      }
+      footer {
+        text-align: center;
+        padding: 2rem 0;
+        margin-top: 3rem;
+        background-color: transparent;
+        color: var(--light-text-color);
+        border-top: 1px solid var(--border-color);
+      }
+      @media (max-width: 820px) {
+        .menu-toggle {
+          display: block;
+        }
+        nav {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          background-color: var(--bg-color);
+          box-shadow: var(--shadow-md);
+        }
+        nav.active {
+          display: block;
+        }
+        nav ul {
+          flex-direction: column;
+          width: 100%;
+          gap: 0;
+        }
+        nav ul li {
+          width: 100%;
+        }
+        nav a {
+          display: block;
+          text-align: left;
+          padding: 1rem 1.5rem;
+          border-radius: 0;
+          border-bottom: 1px solid var(--border-color);
+        }
+        nav a.active,
+        nav a:hover {
+          background-color: var(--secondary-color);
+        }
+        .welcome-card h2 {
+          font-size: 2rem;
+        }
+        .responsive-table thead {
+          display: none;
+        }
+        .responsive-table tr {
+          display: block;
+          border: 1px solid var(--border-color);
+          margin-bottom: 1rem;
+          border-radius: var(--radius);
+          background: var(--bg-color);
+          padding: 1.5rem;
+          box-shadow: var(--shadow-md);
+        }
+        .responsive-table td {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          text-align: right;
+          border-bottom: 1px solid #eee;
+          padding: 12px 0;
+        }
+        .responsive-table td:last-child {
+          border-bottom: none;
+        }
+        .responsive-table td::before {
+          content: attr(data-label);
+          font-weight: bold;
+          text-align: left;
+          margin-right: 1rem;
+          color: var(--text-color);
+        }
+        .action-buttons {
+          text-align: right;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1 id="schoolName" contenteditable="true" title="Klik untuk mengedit">Sistem Absensi</h1>
+        <button class="menu-toggle" aria-label="Buka menu"><i class="fas fa-bars"></i></button>
+        <nav>
+          <ul>
+            <li>
+              <a data-page="home" class="active"><i class="fas fa-home"></i> Beranda</a>
+            </li>
+            <li>
+              <a data-page="students"><i class="fas fa-users"></i> Data Siswa</a>
+            </li>
+            <li>
+              <a data-page="attendance"><i class="fas fa-clipboard-user"></i> Absensi</a>
+            </li>
+            <li>
+              <a data-page="recap"><i class="fas fa-chart-pie"></i> Laporan Rekapitulasi</a>
+            </li>
+            <li>
+              <a data-page="history"><i class="fas fa-history"></i> Riwayat Absensi</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- Home Page -->
+      <section id="page-home" class="page active">
+        <div class="container">
+          <div class="welcome-card">
+            <h2>Selamat Datang di Sistem Absensi Digital</h2>
+            <p>Kelola dan rekap absensi siswa Anda dengan mudah, cepat, dan akurat.</p>
+            <button id="startAttendanceBtn" class="btn primary"><i class="fas fa-play-circle"></i> Mulai Absen Hari Ini</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Students Page -->
+      <section id="page-students" class="page">
+        <div class="container">
+          <div class="card">
+            <h2><i class="fas fa-users"></i> Manajemen Data Siswa</h2>
+            <div class="toolbar">
+              <button id="addStudentBtn" class="btn primary"><i class="fas fa-plus"></i> Tambah Siswa</button>
+              <button id="importCsvBtn" class="btn success"><i class="fas fa-file-csv"></i> Impor dari CSV</button>
+              <button id="deleteSelectedStudentsBtn" class="btn danger" disabled><i class="fas fa-trash-alt"></i> Hapus yang Dipilih</button>
+              <input type="file" id="csvFileInput" accept=".csv" style="display: none" />
+              <div class="form-group" style="margin-left: auto"><label for="classFilter">Filter Kelas</label><input type="text" id="classFilter" placeholder="Cari kelas..." /></div>
+            </div>
+          </div>
+          <div class="table-wrapper" style="margin-top: 2rem">
+            <table id="studentsTable" class="responsive-table">
+              <thead>
+                <tr>
+                  <th style="width: 1%"><input type="checkbox" id="selectAllStudents" title="Pilih Semua" /></th>
+                  <th style="width: 4%">No</th>
+                  <th>Nama Lengkap</th>
+                  <th>NIS/NISN</th>
+                  <th>Kelas</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Attendance Page -->
+      <section id="page-attendance" class="page">
+        <div class="container">
+          <div class="card">
+            <h2><i class="fas fa-clipboard-user"></i> Pengisian Absensi Harian</h2>
+            <div class="toolbar">
+              <div class="form-group"><label for="attendanceDate">Pilih Tanggal:</label><input type="date" id="attendanceDate" /></div>
+              <div class="form-group">
+                <label for="attendanceClassFilter">Filter Kelas:</label
+                ><select id="attendanceClassFilter">
+                  <option value="">Semua Kelas</option>
+                </select>
+              </div>
+              <button id="saveAttendanceBtn" class="btn primary" style="margin-left: auto"><i class="fas fa-save"></i> Simpan Absensi</button>
+            </div>
+          </div>
+          <div class="table-wrapper" style="margin-top: 2rem">
+            <table id="attendanceTable" class="responsive-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama Lengkap</th>
+                  <th>NIS/NISN</th>
+                  <th>Kelas</th>
+                  <th>Status Kehadiran</th>
+                  <th>Catatan</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recap Summary Page -->
+      <section id="page-recap" class="page">
+        <div class="container">
+          <h2><i class="fas fa-chart-pie"></i> Laporan Rekapitulasi Absensi</h2>
+          <div class="card">
+            <h3>Filter Laporan</h3>
+            <div class="toolbar recap-filters">
+              <div class="form-group"><label for="recapDateStartFilter">Tanggal Mulai:</label><input type="date" id="recapDateStartFilter" /></div>
+              <div class="form-group"><label for="recapDateEndFilter">Tanggal Akhir:</label><input type="date" id="recapDateEndFilter" /></div>
+              <div class="form-group">
+                <label for="recapClassFilter">Filter Kelas:</label
+                ><select id="recapClassFilter">
+                  <option value="">Semua Kelas</option>
+                </select>
+              </div>
+              <button id="resetRecapFilterBtn" class="btn secondary">Reset Filter</button>
+            </div>
+            <div class="toolbar export-buttons">
+              <button id="exportRecapPdfBtn" class="btn primary" disabled><i class="fas fa-file-pdf"></i> Ekspor Ringkasan ke PDF</button>
+              <button id="exportRecapXlsxBtn" class="btn success" disabled><i class="fas fa-file-excel"></i> Ekspor Ringkasan ke Excel</button>
+            </div>
+          </div>
+          <div class="table-wrapper" style="margin-top: 2rem">
+            <h3 id="recapTitle" style="margin-bottom: 1.5rem; font-weight: 500; padding: 0 1rem"></h3>
+            <table id="recapTable" class="responsive-table">
+              <thead>
+                <tr>
+                  <th style="width: 4%">No</th>
+                  <th>Nama Siswa</th>
+                  <th>NIS/NISN</th>
+                  <th>Kelas</th>
+                  <th style="width: 8%">Hadir</th>
+                  <th style="width: 8%">Sakit</th>
+                  <th style="width: 8%">Izin</th>
+                  <th style="width: 8%">Alpa</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- History Page -->
+      <section id="page-history" class="page">
+        <div class="container">
+          <h2><i class="fas fa-history"></i> Riwayat Absensi</h2>
+          <div class="card">
+            <h3>Manajemen Riwayat</h3>
+            <div class="toolbar">
+              <div class="form-group">
+                <label for="historyClassFilter">Filter Kelas:</label
+                ><select id="historyClassFilter">
+                  <option value="">Semua Kelas</option>
+                </select>
+              </div>
+              <div class="form-group"><label for="historyDateStartFilter">Tanggal Mulai:</label><input type="date" id="historyDateStartFilter" /></div>
+              <div class="form-group"><label for="historyDateEndFilter">Tanggal Akhir:</label><input type="date" id="historyDateEndFilter" /></div>
+              <button id="resetHistoryFilterBtn" class="btn secondary">Reset Filter</button>
+            </div>
+            <div class="toolbar">
+              <button id="deleteSelectedHistoryBtn" class="btn danger" disabled><i class="fas fa-trash-alt"></i> Hapus yang Dipilih</button>
+              <button id="exportLogPdfBtn" class="btn primary" disabled><i class="fas fa-file-pdf"></i> Ekspor Riwayat ke PDF</button>
+              <button id="exportLogXlsxBtn" class="btn success" disabled><i class="fas fa-file-excel"></i> Ekspor Riwayat ke Excel</button>
+            </div>
+          </div>
+          <div class="table-wrapper" style="margin-top: 2rem">
+            <table id="historyTable" class="responsive-table">
+              <thead>
+                <tr>
+                  <th style="width: 1%"><input type="checkbox" id="selectAllHistory" title="Pilih Semua" /></th>
+                  <th style="width: 4%">No</th>
+                  <th>Nama Siswa</th>
+                  <th>NIS/NISN</th>
+                  <th>Kelas</th>
+                  <th>Tanggal</th>
+                  <th>Status</th>
+                  <th>Catatan</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container"><p>© 2025 Tipsntech. All rights reserved.</p></div>
+    </footer>
+
+    <!-- Modal for Add/Edit Student -->
+    <div id="studentModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">×</span>
+        <h3 id="modalTitle">Tambah Siswa Baru</h3>
+        <form id="studentForm">
+          <input type="hidden" id="studentNisnKey" />
+          <div class="form-group"><label for="fullName">Nama Lengkap</label><input type="text" id="fullName" required /></div>
+          <div class="form-group"><label for="nisn">NIS/NISN</label><input type="text" id="nisn" required /></div>
+          <div class="form-group"><label for="className">Kelas</label><input type="text" id="className" required /></div>
+          <button type="submit" class="btn primary" style="width: 100%"><i class="fas fa-save"></i> Simpan</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        //==================================
+        // STORAGE MODULE
+        //==================================
+        const SCHOOL_NAME_KEY = "schoolAttendance_schoolName";
+        const STUDENTS_KEY = "schoolAttendance_students";
+        const ATTENDANCE_KEY = "schoolAttendance_attendance";
+
+        const storage = {
+          getSchoolName: () => localStorage.getItem(SCHOOL_NAME_KEY) || "Sistem Absensi",
+          saveSchoolName: (name) => localStorage.setItem(SCHOOL_NAME_KEY, name),
+          getStudents: () => JSON.parse(localStorage.getItem(STUDENTS_KEY)) || [],
+          saveStudents: (students) => localStorage.setItem(STUDENTS_KEY, JSON.stringify(students)),
+          addStudent: (student) => storage.saveStudents([...storage.getStudents(), student]),
+          updateStudent: (updatedStudent) => {
+            let students = storage.getStudents().map((s) => (s.nisn === updatedStudent.nisn ? updatedStudent : s));
+            storage.saveStudents(students);
+          },
+          deleteStudent: (nisn) => {
+            storage.saveStudents(storage.getStudents().filter((s) => s.nisn !== nisn));
+            let allAttendance = storage.getAttendance();
+            for (const date in allAttendance) {
+              allAttendance[date] = allAttendance[date].filter((att) => att.nisn !== nisn);
+              if (allAttendance[date].length === 0) delete allAttendance[date];
+            }
+            storage.saveAttendance(allAttendance);
+          },
+          findStudentByNisn: (nisn) => storage.getStudents().find((s) => s.nisn === nisn),
+          getAttendance: () => JSON.parse(localStorage.getItem(ATTENDANCE_KEY)) || {},
+          saveAttendance: (attendance) => localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(attendance)),
+          getAttendanceByDate: (date) => storage.getAttendance()[date] || [],
+          saveAttendanceForDate: (date, dailyAttendance) => {
+            const allAttendance = storage.getAttendance();
+            allAttendance[date] = dailyAttendance;
+            storage.saveAttendance(allAttendance);
+          },
+          deleteAttendanceRecord: (date, nisn) => {
+            let allAttendance = storage.getAttendance();
+            if (allAttendance[date]) {
+              allAttendance[date] = allAttendance[date].filter((att) => att.nisn !== nisn);
+              if (allAttendance[date].length === 0) delete allAttendance[date];
+              storage.saveAttendance(allAttendance);
+            }
+          },
+        };
+
+        //==================================
+        // UI & NAVIGATION
+        //==================================
+        const navLinks = document.querySelectorAll("nav a");
+        const pages = document.querySelectorAll(".page");
+        const menuToggle = document.querySelector(".menu-toggle");
+        const nav = document.querySelector("nav");
+
+        function navigateTo(pageId) {
+          pages.forEach((p) => p.classList.remove("active"));
+          document.getElementById(`page-${pageId}`)?.classList.add("active");
+          navLinks.forEach((l) => l.classList.toggle("active", l.dataset.page === pageId));
+          const initFunctions = { students: initStudentsPage, attendance: initAttendancePage, recap: initRecapPage, history: initHistoryPage };
+          initFunctions[pageId]?.();
+        }
+
+        //==================================
+        // STUDENTS PAGE
+        //==================================
+        const studentModal = document.getElementById("studentModal");
+        const studentForm = document.getElementById("studentForm");
+        const classFilter = document.getElementById("classFilter");
+        const studentsTableBody = document.querySelector("#studentsTable tbody");
+        const selectAllStudentsCheckbox = document.getElementById("selectAllStudents");
+        const deleteSelectedStudentsBtn = document.getElementById("deleteSelectedStudentsBtn");
+
+        function initStudentsPage() {
+          renderStudentsTable();
+          populateAllClassFilters();
+        }
+        function openStudentModal(student = null) {
+          studentForm.reset();
+          document.getElementById("nisn").readOnly = !!student;
+          document.getElementById("modalTitle").textContent = student ? "Edit Data Siswa" : "Tambah Siswa Baru";
+          if (student) {
+            document.getElementById("studentNisnKey").value = student.nisn;
+            document.getElementById("fullName").value = student.name;
+            document.getElementById("nisn").value = student.nisn;
+            document.getElementById("className").value = student.class;
+          }
+          studentModal.style.display = "block";
+        }
+        function closeStudentModal() {
+          studentModal.style.display = "none";
+        }
+        function renderStudentsTable() {
+          const students = storage.getStudents();
+          const filterValue = classFilter.value.toLowerCase();
+          const filteredStudents = students.filter((s) => s.class.toLowerCase().includes(filterValue));
+          studentsTableBody.innerHTML =
+            filteredStudents.length === 0
+              ? `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Tidak ada data siswa.</td></tr>`
+              : filteredStudents
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(
+                    (student, index) => `
+                    <tr>
+                        <td data-label="Pilih"><input type="checkbox" class="student-checkbox" data-nisn="${student.nisn}"></td>
+                        <td data-label="No">${index + 1}</td>
+                        <td data-label="Nama Lengkap">${student.name}</td>
+                        <td data-label="NIS/NISN">${student.nisn}</td>
+                        <td data-label="Kelas">${student.class}</td>
+                        <td data-label="Aksi"><div class="action-buttons">
+                            <button class="edit-btn" data-nisn="${student.nisn}" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="delete-btn" data-nisn="${student.nisn}" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </div></td>
+                    </tr>
+                `
+                  )
+                  .join("");
+          updateBulkDeleteButtonState("students");
+          selectAllStudentsCheckbox.checked = false;
+        }
+        function handleCsvImport(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const lines = e.target.result.split(/\r\n|\n/);
+            let importedCount = 0,
+              skippedCount = 0,
+              feedback = [];
+            lines.forEach((line, index) => {
+              if (!line.trim()) return;
+              const cols = line.split(",").map((c) => c.trim());
+              if (cols.length !== 3 || !cols[0] || !cols[1] || !cols[2]) {
+                skippedCount++;
+                feedback.push(`Baris ${index + 1}: Format salah.`);
+                return;
+              }
+              const [name, nisn, className] = cols;
+              if (storage.findStudentByNisn(nisn)) {
+                skippedCount++;
+                feedback.push(`Baris ${index + 1}: NISN ${nisn} sudah ada.`);
+                return;
+              }
+              storage.addStudent({ name, nisn, class: className });
+              importedCount++;
+            });
+            alert(`Impor Selesai!\nBerhasil: ${importedCount} siswa\nDilewati: ${skippedCount} siswa\n\n${feedback.slice(0, 5).join("\n")}${feedback.length > 5 ? "\n..." : ""}`);
+            event.target.value = "";
+            initStudentsPage();
+          };
+          reader.readAsText(file);
+        }
+
+        //==================================
+        // ATTENDANCE PAGE
+        //==================================
+        const attendanceDatePicker = document.getElementById("attendanceDate");
+        const attendanceClassFilter = document.getElementById("attendanceClassFilter");
+        const attendanceTableBody = document.querySelector("#attendanceTable tbody");
+
+        function initAttendancePage() {
+          if (!attendanceDatePicker.value) attendanceDatePicker.value = new Date().toISOString().split("T")[0];
+          renderAttendanceTable();
+        }
+        function renderAttendanceTable() {
+          const date = attendanceDatePicker.value;
+          const selectedClass = attendanceClassFilter.value;
+          if (!date) {
+            attendanceTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Silakan pilih tanggal.</td></tr>`;
+            return;
+          }
+          let students = storage.getStudents().filter((s) => !selectedClass || s.class === selectedClass);
+          const savedAttendance = storage.getAttendanceByDate(date);
+          attendanceTableBody.innerHTML =
+            students.length === 0
+              ? `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Tidak ada siswa.</td></tr>`
+              : students
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((student, index) => {
+                    const record = savedAttendance.find((att) => att.nisn === student.nisn);
+                    const status = record?.status || "Hadir";
+                    const notes = record?.notes || "";
+                    return `
+                        <tr data-nisn="${student.nisn}">
+                            <td data-label="No">${index + 1}</td><td data-label="Nama Lengkap">${student.name}</td>
+                            <td data-label="NIS/NISN">${student.nisn}</td><td data-label="Kelas">${student.class}</td>
+                            <td data-label="Status Kehadiran" class="status-radio-group">
+                                <label><input type="radio" name="status-${student.nisn}" value="Hadir" ${status === "Hadir" ? "checked" : ""}> Hadir</label>
+                                <label><input type="radio" name="status-${student.nisn}" value="Sakit" ${status === "Sakit" ? "checked" : ""}> Sakit</label>
+                                <label><input type="radio" name="status-${student.nisn}" value="Izin" ${status === "Izin" ? "checked" : ""}> Izin</label>
+                                <label><input type="radio" name="status-${student.nisn}" value="Alpa" ${status === "Alpa" ? "checked" : ""}> Alpa</label>
+                            </td>
+                            <td data-label="Catatan"><input type="text" class="notes-input" value="${notes}" placeholder="Catatan..."></td>
+                        </tr>
+                    `;
+                  })
+                  .join("");
+        }
+        function saveAttendance() {
+          const date = attendanceDatePicker.value;
+          if (!date) return alert("Silakan pilih tanggal!");
+          const rows = attendanceTableBody.querySelectorAll("tr[data-nisn]");
+          if (rows.length === 0) return alert("Tidak ada siswa untuk diabsen.");
+          const attendanceForDate = storage.getAttendanceByDate(date);
+          const nisnsInTable = Array.from(rows).map((row) => row.dataset.nisn);
+          const otherClassAttendance = attendanceForDate.filter((att) => !nisnsInTable.includes(att.nisn));
+          const currentClassAttendance = Array.from(rows).map((row) => ({
+            nisn: row.dataset.nisn,
+            status: row.querySelector('input[type="radio"]:checked').value,
+            notes: row.querySelector(".notes-input").value.trim(),
+          }));
+          storage.saveAttendanceForDate(date, [...otherClassAttendance, ...currentClassAttendance]);
+          alert(`Absensi untuk tanggal ${date} berhasil disimpan!`);
+        }
+
+        //==================================
+        // RECAP SUMMARY PAGE
+        //==================================
+        const recapDateStartFilter = document.getElementById("recapDateStartFilter");
+        const recapDateEndFilter = document.getElementById("recapDateEndFilter");
+        const recapClassFilter = document.getElementById("recapClassFilter");
+        const recapTableBody = document.querySelector("#recapTable tbody");
+        const recapTableFoot = document.querySelector("#recapTable tfoot");
+
+        function initRecapPage() {
+          const today = new Date();
+          recapDateStartFilter.value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
+          recapDateEndFilter.value = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
+          renderRecapSummaryTable();
+        }
+        function getRecapSummaryData() {
+          const startDate = recapDateStartFilter.value,
+            endDate = recapDateEndFilter.value;
+          if (!startDate || !endDate) return [];
+          let students = storage.getStudents().filter((s) => !recapClassFilter.value || s.class === recapClassFilter.value);
+          const allAttendance = storage.getAttendance();
+          return students
+            .map((student) => {
+              const summary = { name: student.name, nisn: student.nisn, class: student.class, Hadir: 0, Sakit: 0, Izin: 0, Alpa: 0 };
+              for (const date in allAttendance) {
+                if (date >= startDate && date <= endDate) {
+                  const record = allAttendance[date].find((att) => att.nisn === student.nisn);
+                  if (record && summary.hasOwnProperty(record.status)) summary[record.status]++;
+                }
+              }
+              return summary;
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
+        }
+        function renderRecapSummaryTable() {
+          const summaryData = getRecapSummaryData();
+          document.getElementById("recapTitle").textContent = `Menampilkan Laporan untuk Kelas: ${recapClassFilter.value || "Semua Kelas"}`;
+          [document.getElementById("exportRecapPdfBtn"), document.getElementById("exportRecapXlsxBtn")].forEach((btn) => (btn.disabled = summaryData.length === 0));
+          recapTableBody.innerHTML =
+            summaryData.length === 0
+              ? `<tr><td colspan="8" style="text-align:center; padding: 2rem;">Tidak ada data untuk ditampilkan.</td></tr>`
+              : summaryData
+                  .map(
+                    (item, index) => `
+                    <tr>
+                        <td data-label="No">${index + 1}</td><td data-label="Nama Siswa">${item.name}</td>
+                        <td data-label="NIS/NISN">${item.nisn}</td><td data-label="Kelas">${item.class}</td>
+                        <td data-label="Hadir">${item.Hadir}</td><td data-label="Sakit">${item.Sakit}</td>
+                        <td data-label="Izin">${item.Izin}</td><td data-label="Alpa">${item.Alpa}</td>
+                    </tr>
+                `
+                  )
+                  .join("");
+
+          if (summaryData.length > 0) {
+            const totals = summaryData.reduce(
+              (acc, curr) => {
+                acc.Hadir += curr.Hadir;
+                acc.Sakit += curr.Sakit;
+                acc.Izin += curr.Izin;
+                acc.Alpa += curr.Alpa;
+                return acc;
+              },
+              { Hadir: 0, Sakit: 0, Izin: 0, Alpa: 0 }
+            );
+            recapTableFoot.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: right;"><strong>TOTAL</strong></td>
+                        <td style="text-align: center;"><strong>${totals.Hadir}</strong></td>
+                        <td style="text-align: center;"><strong>${totals.Sakit}</strong></td>
+                        <td style="text-align: center;"><strong>${totals.Izin}</strong></td>
+                        <td style="text-align: center;"><strong>${totals.Alpa}</strong></td>
+                    </tr>
+                `;
+          } else {
+            recapTableFoot.innerHTML = "";
+          }
+        }
+
+        //==================================
+        // HISTORY PAGE
+        //==================================
+        const historyClassFilter = document.getElementById("historyClassFilter");
+        const historyDateStartFilter = document.getElementById("historyDateStartFilter");
+        const historyDateEndFilter = document.getElementById("historyDateEndFilter");
+        const historyTableBody = document.querySelector("#historyTable tbody");
+        const selectAllHistoryCheckbox = document.getElementById("selectAllHistory");
+        const deleteSelectedHistoryBtn = document.getElementById("deleteSelectedHistoryBtn");
+
+        function initHistoryPage() {
+          renderHistoryTable();
+        }
+        function getFilteredHistoryData() {
+          const allAttendance = storage.getAttendance(),
+            students = storage.getStudents();
+          const classFilterValue = historyClassFilter.value,
+            startDate = historyDateStartFilter.value,
+            endDate = historyDateEndFilter.value;
+          let historyData = [];
+          for (const date in allAttendance) {
+            if ((!startDate || date >= startDate) && (!endDate || date <= endDate)) {
+              allAttendance[date].forEach((att) => {
+                const student = students.find((s) => s.nisn === att.nisn);
+                if (student && (!classFilterValue || student.class === classFilterValue)) {
+                  historyData.push({ ...att, ...student, date });
+                }
+              });
+            }
+          }
+          return historyData.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
+        }
+        function renderHistoryTable() {
+          const data = getFilteredHistoryData();
+          [document.getElementById("exportLogPdfBtn"), document.getElementById("exportLogXlsxBtn")].forEach((btn) => (btn.disabled = data.length === 0));
+          historyTableBody.innerHTML =
+            data.length === 0
+              ? `<tr><td colspan="9" style="text-align:center; padding: 2rem;">Tidak ada riwayat absensi.</td></tr>`
+              : data
+                  .map(
+                    (item, index) => `
+                    <tr>
+                        <td data-label="Pilih"><input type="checkbox" class="history-checkbox" data-date="${item.date}" data-nisn="${item.nisn}"></td>
+                        <td data-label="No">${index + 1}</td>
+                        <td data-label="Nama Siswa">${item.name}</td><td data-label="NIS/NISN">${item.nisn}</td>
+                        <td data-label="Kelas">${item.class}</td><td data-label="Tanggal">${item.date}</td>
+                        <td data-label="Status">${item.status}</td><td data-label="Catatan">${item.notes || "-"}</td>
+                        <td data-label="Aksi"><div class="action-buttons">
+                            <button class="delete-att-btn" data-date="${item.date}" data-nisn="${item.nisn}" data-name="${item.name}" title="Hapus Absensi Ini"><i class="fas fa-trash"></i></button>
+                        </div></td>
+                    </tr>
+                `
+                  )
+                  .join("");
+          updateBulkDeleteButtonState("history");
+          selectAllHistoryCheckbox.checked = false;
+        }
+
+        //==================================
+        // BULK DELETE FUNCTIONS
+        //==================================
+        function updateBulkDeleteButtonState(type) {
+          let checkboxClass, buttonId, selectAllId;
+          if (type === "students") {
+            checkboxClass = ".student-checkbox";
+            buttonId = "deleteSelectedStudentsBtn";
+            selectAllId = "selectAllStudents";
+          } else if (type === "history") {
+            checkboxClass = ".history-checkbox";
+            buttonId = "deleteSelectedHistoryBtn";
+            selectAllId = "selectAllHistory";
+          } else {
+            return;
+          }
+
+          const checkboxes = document.querySelectorAll(checkboxClass);
+          const checkedCount = document.querySelectorAll(`${checkboxClass}:checked`).length;
+          const deleteBtn = document.getElementById(buttonId);
+          const selectAllCheckbox = document.getElementById(selectAllId);
+
+          if (deleteBtn) deleteBtn.disabled = checkedCount === 0;
+          if (selectAllCheckbox) {
+            if (checkboxes.length > 0 && checkedCount === checkboxes.length) selectAllCheckbox.checked = true;
+            else selectAllCheckbox.checked = false;
+          }
+        }
+
+        //==================================
+        // EXPORT FUNCTIONS
+        //==================================
+        function exportToPdf(headers, data, title, filename) {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+          doc.setFontSize(18);
+          doc.text(title, 14, 22);
+          doc.autoTable({ head: [headers], body: data.map(Object.values), startY: 30, theme: "grid", headStyles: { fillColor: [90, 103, 216] } });
+          doc.save(`${filename}_${new Date().toISOString().split("T")[0]}.pdf`);
+        }
+        function exportToXlsx(data, filename) {
+          const worksheet = XLSX.utils.json_to_sheet(data);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan");
+          XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split("T")[0]}.xlsx`);
+        }
+
+        //==================================
+        // HELPERS & EVENT LISTENERS
+        //==================================
+        function populateAllClassFilters() {
+          const classFilters = document.querySelectorAll("#attendanceClassFilter, #recapClassFilter, #historyClassFilter");
+          const classes = [...new Set(storage.getStudents().map((s) => s.class))].sort();
+          classFilters.forEach((select) => {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Semua Kelas</option>';
+            classes.forEach((c) => (select.innerHTML += `<option value="${c}">${c}</option>`));
+            select.value = currentValue;
+          });
+        }
+
+        // --- Navigation ---
+        navLinks.forEach((link) =>
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            navigateTo(e.currentTarget.dataset.page);
+            if (window.innerWidth <= 820) nav.classList.remove("active");
+          })
+        );
+        menuToggle.addEventListener("click", () => nav.classList.toggle("active"));
+        document.getElementById("startAttendanceBtn").addEventListener("click", () => navigateTo("attendance"));
+
+        // --- School Name ---
+        const schoolNameEl = document.getElementById("schoolName");
+        schoolNameEl.textContent = storage.getSchoolName();
+        schoolNameEl.addEventListener("blur", (e) => storage.saveSchoolName(e.target.textContent.trim() || "Sistem Absensi"));
+
+        // --- Student Page Listeners ---
+        document.getElementById("addStudentBtn").addEventListener("click", () => openStudentModal());
+        document.getElementById("importCsvBtn").addEventListener("click", () => document.getElementById("csvFileInput").click());
+        document.getElementById("csvFileInput").addEventListener("change", handleCsvImport);
+        document.querySelector("#studentModal .close-btn").addEventListener("click", closeStudentModal);
+        window.addEventListener("click", (e) => {
+          if (e.target === studentModal) closeStudentModal();
+        });
+        classFilter.addEventListener("input", renderStudentsTable);
+        studentForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const student = { name: document.getElementById("fullName").value.trim(), nisn: document.getElementById("nisn").value.trim(), class: document.getElementById("className").value.trim() };
+          if (document.getElementById("studentNisnKey").value) storage.updateStudent(student);
+          else {
+            if (storage.findStudentByNisn(student.nisn)) return alert("Siswa dengan NIS/NISN ini sudah ada!");
+            storage.addStudent(student);
+          }
+          closeStudentModal();
+          initStudentsPage();
+        });
+        studentsTableBody.addEventListener("click", (e) => {
+          const editBtn = e.target.closest(".edit-btn");
+          if (editBtn) openStudentModal(storage.findStudentByNisn(editBtn.dataset.nisn));
+          const deleteBtn = e.target.closest(".delete-btn");
+          if (deleteBtn && confirm(`Yakin menghapus siswa ${storage.findStudentByNisn(deleteBtn.dataset.nisn).name}? Ini akan menghapus semua data absensinya.`)) {
+            storage.deleteStudent(deleteBtn.dataset.nisn);
+            initStudentsPage();
+          }
+        });
+        studentsTableBody.addEventListener("change", (e) => {
+          if (e.target.matches(".student-checkbox")) updateBulkDeleteButtonState("students");
+        });
+        selectAllStudentsCheckbox.addEventListener("change", (e) => {
+          studentsTableBody.querySelectorAll(".student-checkbox").forEach((cb) => (cb.checked = e.target.checked));
+          updateBulkDeleteButtonState("students");
+        });
+        deleteSelectedStudentsBtn.addEventListener("click", () => {
+          const selectedCheckboxes = studentsTableBody.querySelectorAll(".student-checkbox:checked");
+          if (selectedCheckboxes.length === 0) return;
+          if (confirm(`Apakah Anda yakin ingin menghapus ${selectedCheckboxes.length} siswa yang dipilih?`)) {
+            selectedCheckboxes.forEach((cb) => storage.deleteStudent(cb.dataset.nisn));
+            renderStudentsTable();
+          }
+        });
+
+        // --- Attendance Page ---
+        attendanceDatePicker.addEventListener("change", renderAttendanceTable);
+        attendanceClassFilter.addEventListener("change", renderAttendanceTable);
+        document.getElementById("saveAttendanceBtn").addEventListener("click", saveAttendance);
+
+        // --- Recap Summary Page ---
+        [recapDateStartFilter, recapDateEndFilter, recapClassFilter].forEach((el) => el.addEventListener("change", renderRecapSummaryTable));
+        document.getElementById("resetRecapFilterBtn").addEventListener("click", () => {
+          recapClassFilter.value = "";
+          initRecapPage();
+        });
+        document.getElementById("exportRecapPdfBtn").addEventListener("click", () => {
+          const title = `Laporan Rekapitulasi Absensi (${recapDateStartFilter.value} s/d ${recapDateEndFilter.value})`;
+          const headers = ["No", "Nama Siswa", "NIS/NISN", "Kelas", "Hadir", "Sakit", "Izin", "Alpa"];
+          const summaryData = getRecapSummaryData();
+          const dataForExport = summaryData.map((s, i) => ({ no: i + 1, name: s.name, nisn: s.nisn, class: s.class, hadir: s.Hadir, sakit: s.Sakit, izin: s.Izin, alpa: s.Alpa }));
+          exportToPdf(headers, dataForExport, title, "rekap_absensi");
+        });
+        document.getElementById("exportRecapXlsxBtn").addEventListener("click", () => {
+          const summaryData = getRecapSummaryData();
+          const dataForExport = summaryData.map((s, i) => ({ No: i + 1, "Nama Siswa": s.name, "NIS/NISN": s.nisn, Kelas: s.class, Hadir: s.Hadir, Sakit: s.Sakit, Izin: s.Izin, Alpa: s.Alpa }));
+          exportToXlsx(dataForExport, "rekap_absensi");
+        });
+
+        // --- History Page ---
+        [historyClassFilter, historyDateStartFilter, historyDateEndFilter].forEach((el) => el.addEventListener("change", renderHistoryTable));
+        document.getElementById("resetHistoryFilterBtn").addEventListener("click", () => {
+          historyClassFilter.value = "";
+          historyDateStartFilter.value = "";
+          historyDateEndFilter.value = "";
+          renderHistoryTable();
+        });
+        historyTableBody.addEventListener("click", (e) => {
+          const deleteBtn = e.target.closest(".delete-att-btn");
+          if (deleteBtn) {
+            const { date, nisn, name } = deleteBtn.dataset;
+            if (confirm(`Apakah Anda yakin ingin menghapus data absensi untuk ${name} pada tanggal ${date}?`)) {
+              storage.deleteAttendanceRecord(date, nisn);
+              renderHistoryTable();
+            }
+          }
+        });
+        historyTableBody.addEventListener("change", (e) => {
+          if (e.target.matches(".history-checkbox")) updateBulkDeleteButtonState("history");
+        });
+        selectAllHistoryCheckbox.addEventListener("change", (e) => {
+          historyTableBody.querySelectorAll(".history-checkbox").forEach((cb) => (cb.checked = e.target.checked));
+          updateBulkDeleteButtonState("history");
+        });
+        deleteSelectedHistoryBtn.addEventListener("click", () => {
+          const selectedCheckboxes = historyTableBody.querySelectorAll(".history-checkbox:checked");
+          if (selectedCheckboxes.length === 0) return;
+          if (confirm(`Apakah Anda yakin ingin menghapus ${selectedCheckboxes.length} riwayat absensi yang dipilih?`)) {
+            selectedCheckboxes.forEach((cb) => storage.deleteAttendanceRecord(cb.dataset.date, cb.dataset.nisn));
+            renderHistoryTable();
+          }
+        });
+        document.getElementById("exportLogPdfBtn").addEventListener("click", () => {
+          const title = `Riwayat Absensi (${historyDateStartFilter.value || "Semua"} s/d ${historyDateEndFilter.value || "Semua"})`;
+          const headers = ["No", "Nama Siswa", "NIS/NISN", "Kelas", "Tanggal", "Status", "Catatan"];
+          const data = getFilteredHistoryData().map((d, i) => ({ no: i + 1, name: d.name, nisn: d.nisn, class: d.class, date: d.date, status: d.status, notes: d.notes || "" }));
+          exportToPdf(headers, data, title, "riwayat_absensi");
+        });
+        document.getElementById("exportLogXlsxBtn").addEventListener("click", () => {
+          const data = getFilteredHistoryData().map((d, i) => ({ No: i + 1, "Nama Siswa": d.name, "NIS/NISN": d.nisn, Kelas: d.class, Tanggal: d.date, Status: d.status, Catatan: d.notes || "" }));
+          exportToXlsx(data, "riwayat_absensi");
+        });
+
+        //==================================
+        // INITIAL APP START
+        //==================================
+        populateAllClassFilters();
+        navigateTo("home");
+      });
+    </script>
+  </body>
+</html>
