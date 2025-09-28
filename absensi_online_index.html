@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Absensi Online - Sederhana</title>
+  <style>
+    :root{--bg:#f7fafc;--card:#ffffff;--primary:#2b6cb0;--muted:#6b7280}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:var(--bg); margin:0; padding:24px}
+    .container{max-width:920px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{margin:0;font-size:20px}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 4px 14px rgba(15,23,42,0.06)}
+    form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    form .full{grid-column:1/-1}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select,button{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ee;background:white}
+    .actions{display:flex;gap:8px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #eef2f7;text-align:left;font-size:14px}
+    .muted{color:var(--muted);font-size:13px}
+    @media (max-width:640px){form{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Absensi Online (Sederhana)</h1>
+      <div class="muted">Masukkan data lalu klik <strong>Absen</strong></div>
+    </header>
+
+    <section class="card">
+      <form id="absenForm">
+        <div>
+          <label for="nama">Nama</label>
+          <input id="nama" name="nama" required placeholder="Masukkan nama lengkap">
+        </div>
+        <div>
+          <label for="nis">NIS / NIP</label>
+          <input id="nis" name="nis" required placeholder="Nomor induk siswa / pegawai">
+        </div>
+        <div>
+          <label for="kelas">Kelas / Unit</label>
+          <input id="kelas" name="kelas" placeholder="Contoh: X-A, RPL-1">
+        </div>
+        <div>
+          <label for="keterangan">Keterangan</label>
+          <select id="keterangan" name="keterangan">
+            <option value="Hadir">Hadir</option>
+            <option value="Izin">Izin</option>
+            <option value="Sakit">Sakit</option>
+            <option value="Alpa">Alpa</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label for="catatan">Catatan (opsional)</label>
+          <input id="catatan" name="catatan" placeholder="Contoh: Datang terlambat 10 menit">
+        </div>
+
+        <div class="full actions">
+          <button type="submit">Absen</button>
+          <button type="button" id="exportBtn">Export CSV</button>
+          <button type="button" id="clearBtn">Hapus Semua</button>
+          <button type="button" id="adminBtn">Masuk Admin</button>
+        </div>
+      </form>
+
+      <div id="status" class="muted">Belum ada data absensi.</div>
+
+      <div style="overflow:auto;margin-top:12px;">
+        <table id="table" aria-live="polite">
+          <thead>
+            <tr><th>No</th><th>Nama</th><th>NIS/NIP</th><th>Kelas</th><th>Keterangan</th><th>Waktu</th><th>Catatan</th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="muted" style="margin-top:12px">Catatan: Sistem ini menyimpan data di browser (localStorage). Untuk kebutuhan real produksi, gunakan backend (server) dan autentikasi yang aman. Jangan simpan data sensitif di repo publik.</p>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'absensi_online_entries_v1';
+
+    function readEntries(){
+      try{
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      }catch(e){return []}
+    }
+    function saveEntries(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+    function render(){
+      const tbody = document.getElementById('tbody');
+      const entries = readEntries();
+      tbody.innerHTML = '';
+      if(entries.length===0){
+        document.getElementById('status').textContent = 'Belum ada data absensi.';
+        return;
+      }
+      document.getElementById('status').textContent = entries.length + ' entri tersimpan.';
+      entries.forEach((e,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(e.nama)}</td><td>${escapeHtml(e.nis)}</td><td>${escapeHtml(e.kelas)}</td><td>${escapeHtml(e.keterangan)}</td><td>${escapeHtml(e.waktu)}</td><td>${escapeHtml(e.catatan||'')}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(s){
+      if(!s) return '';
+      return s.toString().replace(/[&<>"']/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[ch]);
+    }
+
+    document.getElementById('absenForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const nama = document.getElementById('nama').value.trim();
+      const nis = document.getElementById('nis').value.trim();
+      const kelas = document.getElementById('kelas').value.trim();
+      const keterangan = document.getElementById('keterangan').value;
+      const catatan = document.getElementById('catatan').value.trim();
+      if(!nama || !nis){ alert('Nama dan NIS/NIP harus diisi.'); return; }
+      const entries = readEntries();
+      const now = new Date();
+      const waktu = now.toLocaleString();
+      entries.push({ nama, nis, kelas, keterangan, catatan, waktu });
+      saveEntries(entries);
+      render();
+      e.target.reset();
+      document.getElementById('nama').focus();
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      const entries = readEntries();
+      if(entries.length===0){ alert('Tidak ada data untuk diexport.'); return; }
+      const header = ['No','Nama','NIS/NIP','Kelas','Keterangan','Waktu','Catatan'];
+      const csv = [header.join(',')].concat(entries.map((r,i)=>[
+        i+1,
+        '"'+r.nama.replace(/"/g,'""')+'"',
+        '"'+r.nis.replace(/"/g,'""')+'"',
+        '"'+(r.kelas||'').replace(/"/g,'""')+'"',
+        '"'+r.keterangan.replace(/"/g,'""')+'"',
+        '"'+r.waktu.replace(/"/g,'""')+'"',
+        '"'+(r.catatan||'').replace(/"/g,'""')+'"'
+      ].join(',')).join('\n'));
+      const blob = new Blob([csv.join('\n')], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'absensi_export_'+(new Date()).toISOString().slice(0,10)+'.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', ()=>{
+      if(!confirm('Yakin hapus semua data absensi di browser ini? Tindakan ini tidak bisa dibatalkan.')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+    });
+
+    document.getElementById('adminBtn').addEventListener('click', ()=>{
+      // proteksi sederhana: password client-side (TIDAK AMAN untuk produksi)
+      const pw = prompt('Masukkan kata sandi admin (demo):');
+      if(pw === 'admin123'){
+        document.getElementById('exportBtn').click();
+      }else{
+        alert('Kata sandi salah atau dibatalkan.');
+      }
+    });
+
+    // initial render
+    render();
+  </script>
+</body>
+</html>
